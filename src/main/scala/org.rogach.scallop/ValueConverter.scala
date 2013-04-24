@@ -2,6 +2,34 @@ package org.rogach.scallop
 
 import scala.reflect.Manifest
 
+class PropertyBackedConverter[A](
+  name: String
+  , underlying: ValueConverter[A]
+  , appProps: java.util.Properties = new java.util.Properties
+) extends ValueConverter[A] {
+  override def parse(s: List[(String,List[String])]): Either[Unit,Option[A]] = {
+    underlying.parse(s) match {
+      case Right(Some(a)) => 
+        a match {
+          case l:List[A] if l.isEmpty => parseProps
+          case _ => Right(Some(a))
+        }
+      case _ => parseProps
+    }
+  }
+
+  private def parseProps: Either[Unit, Option[A]] = {
+    val propVal = appProps.getProperty(name)
+    if (propVal == null) 
+      Right(None)
+    else 
+      underlying.parse(List((name, propVal.split(" ").map { _.trim }.toList)))
+  }
+
+  val manifest = underlying.manifest
+  val argType = underlying.argType
+}
+
 /** Converter from list of plain strings to something meaningful. */
 trait ValueConverter[A] { parent =>
   

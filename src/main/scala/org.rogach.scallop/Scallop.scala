@@ -10,7 +10,12 @@ object Scallop {
     *
     * @param args Args to pre-insert.
     */
-  def apply(args: Seq[String]): Scallop = new Scallop(args)
+  def apply(args: Seq[String]): Scallop = apply(args, false)
+
+  def apply(
+    args: Seq[String]
+    , propertyBacked: Boolean
+  ): Scallop = new Scallop(args, propertyBacked = propertyBacked)
   
   /** Create the default empty parser, fresh as mountain air. */
   def apply(): Scallop = apply(Nil)
@@ -30,6 +35,7 @@ object Scallop {
   * @param helpWidth Width, to which the help output will be formatted (note that banner, footer, version and description are not affected!)
   * @param shortSubcommandsHelp If true, then help output from this builder wouldn't list full help for subcommands, only short description
   * @param subbuilders subcommands in this builder
+  * @param Use a backing java.util.Properties file
   */
 case class Scallop(
     args: Seq[String] = Nil,
@@ -42,7 +48,32 @@ case class Scallop(
     optionSetValidations: List[List[String]=>Either[String, Unit]] = Nil,
     helpWidth: Option[Int] = None,
     shortSubcommandsHelp: Boolean = false,
-    subbuilders: List[(String, Scallop)] = Nil) {
+    subbuilders: List[(String, Scallop)] = Nil,
+    propertyBacked: Boolean = false
+) {
+
+  lazy val appProps = { 
+    val props = new java.util.Properties
+    val configPath = System.getProperty("scallop.app.config")
+    if (configPath == null) {
+      println("Env variable, scallop.app.config, not set.")
+    } else {
+      println("Loading app config from " + configPath)
+      val in = new java.io.FileInputStream(configPath)
+      try {
+        props.load(in)
+      } finally {
+        try { 
+          in.close 
+        }   
+        catch { 
+          case e: Exception => e.printStackTrace
+        }   
+      }   
+    }   
+    props
+  }
+
 
   type Parsed = List[(CliOption, (String, List[String]))]
   
@@ -258,11 +289,16 @@ case class Scallop(
       if (m >:> conv.manifest) validate(a.asInstanceOf[A])
       else false
     }
+
+    val realConv =
+      if (propertyBacked) new PropertyBackedConverter(name, conv, appProps)
+      else conv
+
     this.copy(opts = opts :+ SimpleOption(name, 
                                           eShort,
                                           descr,
                                           required, 
-                                          conv, 
+                                          realConv, 
                                           defaultA, 
                                           validator,
                                           argName,

@@ -22,7 +22,11 @@ class Subcommand(val commandName: String) extends ScallopConf(Nil, commandName) 
   }
 }
 
-abstract class ScallopConf(val args: Seq[String] = Nil, protected val commandname: String = "") extends ScallopConfValidations with AfterInit {
+abstract class ScallopConf(
+  val args: Seq[String] = Nil
+  , protected val commandname: String = ""
+  , val propertyBacked: Boolean = false
+) extends ScallopConfValidations with AfterInit {
 
   if (ScallopConf.rootConf.value == null) {
     ScallopConf.rootConf.value = this
@@ -41,7 +45,7 @@ abstract class ScallopConf(val args: Seq[String] = Nil, protected val commandnam
     builder = fn(builder)
   }
   
-  var builder = Scallop(args)
+  var builder = Scallop(args, propertyBacked)
 
   // machinery to support option name guessing
 
@@ -429,7 +433,10 @@ abstract class ScallopConf(val args: Seq[String] = Nil, protected val commandnam
 /** This configuration object allows user to specify custom error handling in its "initialize" method.
   * That method returs the proper ScallopConf, which then can be queried for options.
   */
-abstract class LazyScallopConf(args: Seq[String]) extends ScallopConf(args) {
+abstract class LazyScallopConf(
+  args: Seq[String]
+  , propertyBacked: Boolean = false
+) extends ScallopConf(args, propertyBacked = propertyBacked) {
   /** Initializes this configuration object, passing any exceptions into provided partial function.
     * Note that this method neither creates new configuration object nor mutates the state of the current object.
     */
