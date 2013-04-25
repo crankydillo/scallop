@@ -6,44 +6,43 @@ import org.rogach.scallop.exceptions._
 class NormalTest extends FunSuite with ShouldMatchers {
   
   test ("main") {
-val opts = Scallop(List("-d","--num-limbs","1"))
-  .version("test 1.2.3 (c) 2012 Mr Placeholder") // --version option is provided for you
-                                       // in "verify" stage it would print this message and exit
-  .banner("""Usage: test [OPTION]... [pet-name]
-            |test is an awesome program, which does something funny      
-            |Options:
-            |""".stripMargin) // --help is provided, will also exit after printing version,
-                              // banner, options usage, and footer
-  .footer("\nFor all other tricks, consult the documentation!")
-  .opt[Boolean]("donkey", descr = "use donkey mode") // simple flag option
-  .opt("monkeys", default = () => Some(2), short = 'm') // you can add the default option
-                                                  // the type will be inferred
-  .opt[Int]("num-limbs", 'k', 
-    "number of libms", required = true) // you can override the default short-option character
-  .opt[List[Double]]("params") // default converters are provided for all primitives
-                               // and for lists of primitives
-  .opt[String]("debug", hidden = true) // hidden parameters are not printed in help
-  .props[String]('D',"some key-value pairs") // yes, property args can have types on their values too
-  .args(List("-Dalpha=1","-D","betta=2","gamma=3", "Pigeon")) // you can add parameters a bit later
-  .trailArg[String]("pet name") // you can specify what do you want to get from the end of 
-                                // args list
-  .verify
-  
-opts.get[Boolean]("donkey") should equal (Some(true))
-opts[Int]("monkeys") should equal (2)
-opts[Int]("num-limbs") should equal (1)
-opts.prop[String]('D',"alpha") should equal (Some("1"))
-opts[String]("pet name") should equal ("Pigeon")
-intercept[WrongTypeRequest] {
-  opts[Double]("monkeys") // this will throw an exception at runtime
-                          // because the wrong type is requested
-}
+    val opts = Scallop(List("-d","--num-limbs","1"))
+      .version("test 1.2.3 (c) 2012 Mr Placeholder") // --version option is provided for you
+                                           // in "verify" stage it would print this message and exit
+      .banner("""Usage: test [OPTION]... [pet-name]
+                |test is an awesome program, which does something funny      
+                |Options:
+                |""".stripMargin) // --help is provided, will also exit after printing version,
+                                  // banner, options usage, and footer
+      .footer("\nFor all other tricks, consult the documentation!")
+      .opt[Boolean]("donkey", descr = "use donkey mode") // simple flag option
+      .opt("monkeys", default = () => Some(2), short = 'm') // you can add the default option
+                                                      // the type will be inferred
+      .opt[Int]("num-limbs", 'k', 
+        "number of libms", required = true) // you can override the default short-option character
+      .opt[List[Double]]("params") // default converters are provided for all primitives
+                                   // and for lists of primitives
+      .opt[String]("debug", hidden = true) // hidden parameters are not printed in help
+      .props[String]('D',"some key-value pairs") // yes, property args can have types on their values too
+      .args(List("-Dalpha=1","-D","betta=2","gamma=3", "Pigeon")) // you can add parameters a bit later
+      .trailArg[String]("pet name") // you can specify what do you want to get from the end of 
+                                    // args list
+      .verify
+      
+    opts.get[Boolean]("donkey") should equal (Some(true))
+    opts[Int]("monkeys") should equal (2)
+    opts[Int]("num-limbs") should equal (1)
+    opts.prop[String]('D',"alpha") should equal (Some("1"))
+    opts[String]("pet name") should equal ("Pigeon")
+    intercept[WrongTypeRequest] {
+      opts[Double]("monkeys") // this will throw an exception at runtime
+    }
 
-opts.printHelp
-println
-println(opts.summary) // returns summary of parser status (with current arg values)
+    opts.printHelp
+    println
+    println(opts.summary) // returns summary of parser status (with current arg values)
 
-//opts.args(List("--help")).verify
+    //opts.args(List("--help")).verify
   }
   
   test ("no values") {
@@ -161,6 +160,21 @@ println(opts.summary) // returns summary of parser status (with current arg valu
       .verify
     opts[Int]("ang") should equal (42)
   }
+
+  test ("java.util.Properties-backing feature") {
+    val props = new java.util.Properties
+    props.setProperty("from-prop", "Marcel")
+    props.setProperty("cli-override", "oh-nos!")
+    val opts = Scallop(List("--cli-override", "oh-yes!"), appProps = Some(props))
+      .opt("from-cl", default = () => Some("Ledbetter"), required = true)
+      .opt("from-prop", default = () => Some("Ledbetter"), required = true)
+      .opt[String]("cli-override")
+      .verify
+    opts[String]("from-cl") should equal ("Ledbetter")
+    opts[String]("from-prop") should equal ("Marcel")
+    opts[String]("cli-override") should equal ("oh-yes!")
+  }
+
 
   test ("additional args") {
     val opts = Scallop(List("-a","5"))

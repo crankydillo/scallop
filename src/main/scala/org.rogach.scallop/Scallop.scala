@@ -15,10 +15,34 @@ object Scallop {
   def apply(
     args: Seq[String]
     , propertyBacked: Boolean
-  ): Scallop = new Scallop(args, propertyBacked = propertyBacked)
-  
+  ): Scallop =
+    if (!propertyBacked) new Scallop(args)
+    else new Scallop(args, appProps = Some(loadProps))
+
   /** Create the default empty parser, fresh as mountain air. */
   def apply(): Scallop = apply(Nil)
+
+  private def loadProps(): java.util.Properties = {
+    val props = new java.util.Properties
+    val configPath = System.getProperty("scallop.app.config")
+    if (configPath == null) {
+      println("Env variable, scallop.app.config, not set.")
+    } else {
+      println("Loading app config from " + configPath)
+      val in = new java.io.FileInputStream(configPath)
+      try {
+        props.load(in)
+      } finally {
+        try { 
+          in.close 
+        }   
+        catch { 
+          case e: Exception => e.printStackTrace
+        }   
+      }   
+    }   
+    props
+  }
 
 }
 
@@ -49,31 +73,8 @@ case class Scallop(
     helpWidth: Option[Int] = None,
     shortSubcommandsHelp: Boolean = false,
     subbuilders: List[(String, Scallop)] = Nil,
-    propertyBacked: Boolean = false
+    appProps: Option[java.util.Properties] = None
 ) {
-
-  lazy val appProps = { 
-    val props = new java.util.Properties
-    val configPath = System.getProperty("scallop.app.config")
-    if (configPath == null) {
-      println("Env variable, scallop.app.config, not set.")
-    } else {
-      println("Loading app config from " + configPath)
-      val in = new java.io.FileInputStream(configPath)
-      try {
-        props.load(in)
-      } finally {
-        try { 
-          in.close 
-        }   
-        catch { 
-          case e: Exception => e.printStackTrace
-        }   
-      }   
-    }   
-    props
-  }
-
 
   type Parsed = List[(CliOption, (String, List[String]))]
   
@@ -291,8 +292,10 @@ case class Scallop(
     }
 
     val realConv =
-      if (propertyBacked) new PropertyBackedConverter(name, conv, appProps)
-      else conv
+      appProps match {
+        case Some(p) => new PropertyBackedConverter(name, conv, p)
+        case _ => conv
+      }
 
     this.copy(opts = opts :+ SimpleOption(name, 
                                           eShort,
