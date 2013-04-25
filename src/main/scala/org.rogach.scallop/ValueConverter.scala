@@ -11,7 +11,7 @@ class PropertyBackedConverter[A](
     underlying.parse(s) match {
       case Right(Some(a)) => 
         a match {
-          case l:List[A] if l.isEmpty => parseProps
+          case l:List[_] if l.isEmpty => parseProps
           case _ => Right(Some(a))
         }
       case _ => parseProps

@@ -31,7 +31,7 @@ publishArtifact in Test := false
 pomIncludeRepository := { x => false }
 
 pomExtra := (
-  <url>https://github.com/Rogach/scallop</url>
+  <url>https://github.com/crankydillo/scallop</url>
   <licenses>
     <license>
       <name>MIT License</name>
@@ -39,8 +39,8 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-    <url>git@github.com:Rogach/scallop.git</url>
-    <connection>scm:git:git@github.com:Rogach/scallop.git</connection>
+    <url>git@github.com:crankydillo/scallop.git</url>
+    <connection>scm:git:git@github.com:crankydillo/scallop.git</connection>
   </scm>
   <developers>
     <developer>
@@ -51,7 +51,7 @@ pomExtra := (
   </developers>
 )
 
-scalacOptions in (Compile, doc) ++= Opts.doc.sourceUrl("https://github.com/Rogach/scallop/tree/master/€{FILE_PATH}.scala")
+//scalacOptions in (Compile, doc) ++= Opts.doc.sourceUrl("https://github.com/Rogach/scallop/tree/master/€{FILE_PATH}.scala")
 
 parallelExecution in Test := false
 
@@ -61,7 +61,7 @@ site.includeScaladoc("")
 
 ghpages.settings
 
-git.remoteRepo := "git@github.com:Rogach/scallop.git"
+git.remoteRepo := "git@github.com:crankydillo/scallop.git"
 
 // fix for paths to source files in scaladoc
 doc in Compile <<= (doc in Compile) map { in =>

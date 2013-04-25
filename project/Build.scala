@@ -5,7 +5,7 @@ import fmpp.FmppPlugin._
 object build extends Build {
   
   val versRgx = """[0-9]+\.[0-9]+\.[0-9]+""".r
-  val readmeVersion = versRgx.findFirstIn(io.Source.fromFile("README.md").getLines.toList.filter(_.contains("libraryDependencies")).mkString).get
+  //val readmeVersion = versRgx.findFirstIn(io.Source.fromFile("README.md").getLines.toList.filter(_.contains("libraryDependencies")).mkString).get
   
   val branch = {
     import sys.process._
@@ -13,13 +13,7 @@ object build extends Build {
   }.head.trim
   println("git branch: %s" format branch)
   
-  val vers = 
-    if (branch == "master")
-      readmeVersion
-    else {
-      val n = readmeVersion.split("\\.")
-      (n.init :+ (n.last.toInt + 1)).mkString(".") + "-SNAPSHOT"
-    }
+  val vers = "0.8.2-SNAPSHOT"
   println("version: %s" format vers)
   
   def publishSnapshot = Command.command("publish-snapshot") { state =>
