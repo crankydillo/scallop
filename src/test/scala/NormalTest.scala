@@ -175,7 +175,6 @@ class NormalTest extends FunSuite with ShouldMatchers {
     opts[String]("cli-override") should equal ("oh-yes!")
   }
 
-
   test ("additional args") {
     val opts = Scallop(List("-a","5"))
       .opt[List[Int]]("ang")
