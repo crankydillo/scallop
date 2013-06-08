@@ -4,15 +4,6 @@ import fmpp.FmppPlugin._
 
 object build extends Build {
   
-  val versRgx = """[0-9]+\.[0-9]+\.[0-9]+""".r
-  //val readmeVersion = versRgx.findFirstIn(io.Source.fromFile("README.md").getLines.toList.filter(_.contains("libraryDependencies")).mkString).get
-  
-  val branch = {
-    import sys.process._
-    "git status" #| Seq("grep", "On branch") #| Seq("sed", "s_\\#\\s*On\\s*branch\\s*__") lines
-  }.head.trim
-  println("git branch: %s" format branch)
-  
   val vers = "0.8.2-SNAPSHOT"
   println("version: %s" format vers)
   
