@@ -142,6 +142,30 @@ abstract class ScallopConf(
     }
   }
 
+  def tally(
+      name: String = null,
+      short: Char = 0.toChar,
+      descr: String = "",
+      hidden: Boolean = false,
+      noshort: Boolean = false): ScallopOption[Int] = {
+
+    // guessing name, if needed
+    val resolvedName =
+      if (name == null)
+        if (guessOptionName) genName()
+        else throw new IllegalArgumentException("You should supply a name for your option!")
+      else name
+
+    editBuilder(
+      _.opt[Int](resolvedName, short, descr, () => Some(0), _ => true,
+                 false, "", hidden, noshort)(tallyConverter))
+    val n = getName(resolvedName)
+    new ScallopOption[Int](n) {
+      override lazy val fn = { (x: String) => assertVerified; rootConfig.builder.get[Int](x)(implicitly[Manifest[Int]])}
+      override lazy val supplied = {assertVerified; rootConfig.builder.isSupplied(name)}
+    }
+  }
+
   /** Add new property option definition to this config object, and get a handle for option retreiving.
     * 
     * @param name Char, that will be used as prefix for property arguments.

@@ -192,8 +192,6 @@ case class Scallop(
     parse(argList)
   } else parse(args)
 
-  /** cache for option&property values returned from this builder. */
-//  private var getCache = scala.collection.mutable.Map[(String,Manifest[_]),Any]()
 
   /** Tests whether this string contains option name, not some number. */
   private def isOptionName(s: String) = 
@@ -527,6 +525,7 @@ case class Scallop(
     } else {
       optsHelp + "\n\n trailing arguments:\n" + trailHelp + subcommandsHelp
     }
+    formattedHelp.replaceAll(" +(\n)| +$", "$1") // remove trailing whitespace
   }
     
   /** Print help message (with version, banner, option usage and footer) to stdout. */
@@ -654,6 +653,13 @@ case class Scallop(
       if (!(get(o.name)(o.converter.manifest) map (v => o.validator(o.converter.manifest,v)) getOrElse true))
         throw new ValidationFailure("Validation failure for '%s' option parameters: %s" format (o.name, args.map(_._2.mkString(" ")).mkString(" ")))
 
+    }
+
+    // validate option sets
+    optionSetValidations map (
+      _(getAllSuppliedOptionNames)
+    ) find (_.isLeft) map { l =>
+      throw new OptionSetValidationFailure(l.left.get)
     }
 
     this

@@ -2,7 +2,7 @@ package org.rogach.scallop
 
 class HelpTest extends UsefulMatchers with CapturingTest {
   throwError.value = false
-  
+
   test ("help printing") {
     val (out, err) = captureOutput {
       val exits = trapExit {
@@ -56,9 +56,37 @@ class HelpTest extends UsefulMatchers with CapturingTest {
                         |and some more
                         |""".stripMargin)
   }
-  
+
+  test ("subcommand description in output") {
+    val (out, err) = captureOutput {
+      val exits = trapExit {
+        object Conf extends ScallopConf(List("--help")) {
+          version("0.1.2")
+          val apples = opt[Int]("apples", descr = "fresh apples!")
+          val tree = new Subcommand("tree") {
+            descr("some tree")
+            val branches = opt[Int]("branches", descr = "how many branches?")
+          }
+          verify
+        }
+        Conf
+      }
+      exits.size should equal (1)
+    }
+    out should equal ("""0.1.2
+                        |  -a, --apples  <arg>   fresh apples!
+                        |      --help            Show help message
+                        |      --version         Show version of this program
+                        |
+                        |Subcommand: tree - some tree
+                        |  -b, --branches  <arg>   how many branches?
+                        |      --help              Show help message
+                        |""".stripMargin)
+  }
+
   test ("help wrapping") {
     val opts = Scallop()
+      .version("")
       .opt[Boolean]("apples", descr = "********* ********* ********* ********* ********* *********")
     opts.setHelpWidth(80).help should equal ("""  -a, --apples    ********* ********* ********* ********* ********* *********
                                                |      --help      Show help message
@@ -70,7 +98,7 @@ class HelpTest extends UsefulMatchers with CapturingTest {
                                                |      --version   Show version of this
                                                |                  program""".stripMargin)
   }
-  
+
   test ("version printing") {
     val (out, err) = captureOutput {
       val exits = trapExit {
@@ -101,18 +129,17 @@ class HelpTest extends UsefulMatchers with CapturingTest {
     }
     exits ==== List(0)
     err ==== ""
-    out ==== 
+    out ====
      """Planting a tree
        |  -a, --apples  <arg>   how many apples?
        |      --help            Show help message
-       |      --version         Show version of this program
        |
        | trailing arguments:
-       |  jang (required)   
+       |  jang (required)
        |finish planting.
        |""".stripMargin
   }
-  
+
   test ("help for subcommand two levels deep") {
     val (out, err, exits) = captureOutputAndExits {
       object Conf extends ScallopConf(Seq("tree", "peach", "--help")) {
@@ -126,14 +153,13 @@ class HelpTest extends UsefulMatchers with CapturingTest {
     }
     exits ==== List(0)
     err ==== ""
-    out ==== 
+    out ====
      """  -a, --apples  <arg>   how many apples?
        |      --help            Show help message
-       |      --version         Show version of this program
        |""".stripMargin
-    
+
   }
-  
+
   test ("short format for subcommands help") {
     val (out, _, _) = captureOutputAndExits {
       object Conf extends ScallopConf(Seq("--help")) {
@@ -153,17 +179,16 @@ class HelpTest extends UsefulMatchers with CapturingTest {
     }
     out ====
       """Planting a tree.
-        |  -b, --bananas  <arg>   
+        |  -b, --bananas  <arg>
         |      --help             Show help message
-        |      --version          Show version of this program
         |
         |Subcommands:
         |  tree        Plant a normal, regular tree
         |  peach       Plant a peach tree.
-        |  submarine   
+        |  submarine
         |""".stripMargin
   }
-  
+
   test ("splitting commands list into 'main' and 'other' options") {
     object Conf extends ScallopConf(Nil) {
       mainOptions = Seq(bananas, apples)
@@ -172,14 +197,13 @@ class HelpTest extends UsefulMatchers with CapturingTest {
       val coconuts   = opt[Int](descr = "amount of coconuts")
       val dewberries = opt[Int](descr = "amount of dewberries")
     }
-    Conf.builder.help ==== 
+    Conf.builder.help ====
       """  -b, --bananas  <arg>      amount of bananas
         |  -a, --apples  <arg>       amount of apples
         |
         |  -c, --coconuts  <arg>     amount of coconuts
         |  -d, --dewberries  <arg>   amount of dewberries
-        |      --help                Show help message
-        |      --version             Show version of this program""".stripMargin
+        |      --help                Show help message""".stripMargin
   }
 
   test ("splitting commands list into 'main' and 'other' options (in subcommands)") {
@@ -192,16 +216,15 @@ class HelpTest extends UsefulMatchers with CapturingTest {
         val dewberries = opt[Int](descr = "amount of dewberries")
       }
     }
-    Conf.plant.builder.help ==== 
+    Conf.plant.builder.help ====
       """  -b, --bananas  <arg>      amount of bananas
         |  -a, --apples  <arg>       amount of apples
         |
         |  -c, --coconuts  <arg>     amount of coconuts
         |  -d, --dewberries  <arg>   amount of dewberries
-        |      --help                Show help message
-        |      --version             Show version of this program""".stripMargin
+        |      --help                Show help message""".stripMargin
   }
-  
+
   test ("user-provided help & version option takes precedence over hardcoded one") {
     object Conf extends ScallopConf(Nil) {
       val help = opt[Boolean](noshort = true, descr = "custom help descr")
