@@ -520,11 +520,12 @@ case class Scallop(
     val trailHelp = Formatter format (
       opts filter (_.isPositional) filter (!_.hidden) flatMap (_.helpInfo(Nil)) map (Some(_)),
       helpWidth)
-    if (opts filter (_.isPositional) isEmpty) {
+    val formattedHelp = if (opts filter (_.isPositional) isEmpty) {
       optsHelp + subcommandsHelp
     } else {
       optsHelp + "\n\n trailing arguments:\n" + trailHelp + subcommandsHelp
     }
+
     formattedHelp.replaceAll(" +(\n)| +$", "$1") // remove trailing whitespace
   }
     
